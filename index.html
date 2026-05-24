@@ -14,10 +14,6 @@
            query, orderBy, limit, serverTimestamp, doc, setDoc }
     from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-  /* ╔══════════════════════════════════════════════════╗
-     ║   🔧 VOTRE CONFIGURATION FIREBASE               ║
-     ║   Console Firebase → Paramètres → Vos apps      ║
-     ╚══════════════════════════════════════════════════╝ */
   const firebaseConfig = {
     apiKey:            "AIzaSyCr1z2sKAo_lkKA-_dJQNMUK_8jQEj3XVI",
     authDomain:        "dispositif-rcp.firebaseapp.com",
@@ -39,31 +35,42 @@
 
 <style>
 /* ═══════════════════════════════════════════
-   RESET & CSS VARIABLES
+   RESET & CSS VARIABLES — THÈME BLANC MÉDICAL
 ═══════════════════════════════════════════ */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 :root {
-  --bg0:    #04080f;
-  --bg1:    #070d18;
-  --bg2:    #0a1220;
-  --bg3:    #0e1a2e;
-  --green:  #00ff88;
-  --green2: #00cc6a;
-  --red:    #ff1744;
-  --red2:   #c4001d;
-  --orange: #ff6d00;
-  --yellow: #ffd600;
-  --blue:   #00b0ff;
-  --cyan:   #00e5ff;
-  --text:   #b0cce0;
-  --dim:    #3a5870;
-  --border: #0d2a40;
-  --border2:#153550;
+  /* Fond blanc/gris très clair */
+  --bg0:    #f0f4f8;
+  --bg1:    #ffffff;
+  --bg2:    #f7fafc;
+  --bg3:    #edf2f7;
+
+  /* Accents colorés sur fond blanc */
+  --green:  #00b359;
+  --green2: #008f47;
+  --red:    #e53e3e;
+  --red2:   #c53030;
+  --orange: #dd6b20;
+  --yellow: #d69e2e;
+  --blue:   #3182ce;
+  --cyan:   #00acc1;
+
+  /* Texte & bordures */
+  --text:   #2d3748;
+  --text2:  #4a5568;
+  --dim:    #718096;
+  --border: #e2e8f0;
+  --border2:#cbd5e0;
+
+  /* Typographies */
   --orb:    'Orbitron', sans-serif;
   --mono:   'JetBrains Mono', monospace;
-  --g-green: 0 0 10px #00ff8866, 0 0 30px #00ff8822;
-  --g-red:   0 0 10px #ff174466, 0 0 30px #ff174422;
-  --g-orange:0 0 10px #ff6d0066, 0 0 30px #ff6d0022;
+
+  /* Glows (adoucis pour fond blanc) */
+  --g-green: 0 2px 12px rgba(0,179,89,0.25);
+  --g-red:   0 2px 12px rgba(229,62,62,0.25);
+  --g-orange:0 2px 12px rgba(221,107,32,0.25);
+  --g-blue:  0 2px 12px rgba(49,130,206,0.2);
 }
 
 html { scroll-behavior: smooth; }
@@ -75,20 +82,19 @@ body {
   overflow-x: hidden;
 }
 
-/* ═══ ANIMATED BACKGROUND ═══ */
+/* Fond avec motif de grille subtil médical */
 body::before {
   content: '';
   position: fixed; inset: 0; z-index: 0; pointer-events: none;
   background:
-    radial-gradient(ellipse 60% 40% at 50% 0%, #001a3322 0%, transparent 70%),
-    linear-gradient(rgba(0,255,136,.018) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(0,255,136,.018) 1px, transparent 1px);
-  background-size: auto, 50px 50px, 50px 50px;
+    linear-gradient(rgba(0,179,89,.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0,179,89,.03) 1px, transparent 1px);
+  background-size: 30px 30px;
 }
 
 /* ═══ SCROLLBAR ═══ */
 ::-webkit-scrollbar { width: 4px; }
-::-webkit-scrollbar-track { background: var(--bg1); }
+::-webkit-scrollbar-track { background: var(--bg0); }
 ::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 2px; }
 
 /* ═══════════════════════════════════════════
@@ -102,17 +108,17 @@ body::before {
 }
 
 /* ═══════════════════════════════════════════
-   HEADER
+   HEADER — fond blanc, accent vert
 ═══════════════════════════════════════════ */
 .header {
   background: var(--bg1);
-  border-bottom: 1px solid var(--border);
+  border-bottom: 2px solid var(--border);
   padding: 14px 20px;
   display: flex;
   align-items: center;
   justify-content: space-between;
   position: sticky; top: 0; z-index: 100;
-  backdrop-filter: blur(10px);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
 }
 
 .header-brand {
@@ -120,17 +126,12 @@ body::before {
 }
 .header-logo {
   width: 36px; height: 36px;
-  background: radial-gradient(circle, #00ff8833, #00ff8800);
-  border: 1.5px solid var(--green);
+  background: linear-gradient(135deg, #e8f5f0, #d0f0e0);
+  border: 2px solid var(--green);
   border-radius: 50%;
   display: flex; align-items: center; justify-content: center;
   font-size: 16px;
   box-shadow: var(--g-green);
-  animation: pulse-logo 3s ease-in-out infinite;
-}
-@keyframes pulse-logo {
-  0%,100% { box-shadow: var(--g-green); }
-  50% { box-shadow: 0 0 20px #00ff8899, 0 0 50px #00ff8833; }
 }
 .header-title {
   font-family: var(--orb);
@@ -139,7 +140,6 @@ body::before {
   letter-spacing: 2px;
   color: var(--green);
   line-height: 1.2;
-  text-shadow: var(--g-green);
 }
 .header-sub {
   font-size: .55rem;
@@ -148,29 +148,27 @@ body::before {
   margin-top: 1px;
 }
 
-/* WiFi status badge */
-.wifi-badge {
+/* Badge Firebase sync (remplace le badge WiFi) */
+.fb-badge {
   display: flex; align-items: center; gap: 6px;
   padding: 5px 10px;
   border-radius: 20px;
   border: 1px solid var(--border);
-  font-size: .62rem; letter-spacing: 1px;
+  font-size: .6rem; letter-spacing: 1px;
+  background: var(--bg2);
+  color: var(--dim);
   transition: .3s;
-  cursor: default;
 }
-.wifi-badge.connected { border-color: var(--green); color: var(--green); box-shadow: var(--g-green); }
-.wifi-badge.disconnected { border-color: var(--dim); color: var(--dim); }
-.wifi-badge.connecting { border-color: var(--blue); color: var(--blue); }
-.wifi-dot {
+.fb-badge.connected { border-color: var(--green); color: var(--green); background: #f0fff8; }
+.fb-dot {
   width: 6px; height: 6px; border-radius: 50%;
   background: currentColor;
 }
-.wifi-badge.connected .wifi-dot { animation: blink-dot 1.5s infinite; }
-.wifi-badge.connecting .wifi-dot { animation: blink-dot .5s infinite; }
-@keyframes blink-dot { 0%,100%{opacity:1} 50%{opacity:.2} }
+.fb-badge.connected .fb-dot { animation: blink-dot 1.5s infinite; }
+@keyframes blink-dot { 0%,100%{opacity:1} 50%{opacity:.3} }
 
 /* ═══════════════════════════════════════════
-   SECTION BLOCKS
+   SECTION BLOCKS — fond blanc, bordure claire
 ═══════════════════════════════════════════ */
 .section {
   margin: 16px 16px 0;
@@ -178,13 +176,7 @@ body::before {
   border: 1px solid var(--border);
   border-radius: 12px;
   overflow: hidden;
-  position: relative;
-}
-.section::before {
-  content: '';
-  position: absolute; top: 0; left: 0; right: 0; height: 1px;
-  background: linear-gradient(90deg, transparent 0%, var(--green) 30%, var(--cyan) 70%, transparent 100%);
-  opacity: .4;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.06);
 }
 
 .section-header {
@@ -196,12 +188,13 @@ body::before {
   letter-spacing: 2.5px;
   color: var(--dim);
   text-transform: uppercase;
+  background: var(--bg2);
 }
 .section-icon { font-size: 14px; }
 .section-body { padding: 16px; }
 
 /* ═══════════════════════════════════════════
-   FORM FIELDS
+   FORM FIELDS — fond blanc propre
 ═══════════════════════════════════════════ */
 .field { margin-bottom: 14px; }
 .field:last-child { margin-bottom: 0; }
@@ -216,7 +209,7 @@ body::before {
 .field-input, .field-select {
   width: 100%;
   background: var(--bg0);
-  border: 1px solid var(--border);
+  border: 1.5px solid var(--border2);
   border-radius: 7px;
   color: var(--text);
   font-family: var(--mono);
@@ -229,22 +222,22 @@ body::before {
 }
 .field-input:focus, .field-select:focus {
   border-color: var(--green);
-  box-shadow: 0 0 0 2px #00ff8818;
-  color: #fff;
+  box-shadow: 0 0 0 3px rgba(0,179,89,0.12);
+  background: #fff;
 }
 .field-select {
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%233a5870' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23718096' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
   background-repeat: no-repeat;
   background-position: right 14px center;
   padding-right: 36px;
   cursor: pointer;
 }
-.field-select option { background: #0a1220; }
+.field-select option { background: #fff; color: var(--text); }
 
 /* Algo preview */
 .algo-box {
-  background: var(--bg0);
-  border: 1px solid var(--border);
+  background: #f0fff8;
+  border: 1px solid #c6f6d5;
   border-radius: 7px;
   padding: 12px 14px;
   font-size: .72rem;
@@ -255,53 +248,16 @@ body::before {
 .algo-box.visible { display: block; }
 .algo-row { display: flex; justify-content: space-between; align-items: center; }
 .algo-key { color: var(--dim); }
-.algo-val { color: var(--green); font-weight: 500; }
+.algo-val { color: var(--green); font-weight: 600; }
 .algo-warn { color: var(--orange); }
 
 /* ═══════════════════════════════════════════
-   WIFI CONNECTION
-═══════════════════════════════════════════ */
-.wifi-input-row {
-  display: flex; gap: 8px; align-items: center;
-  margin-bottom: 12px;
-}
-.wifi-ip-input {
-  flex: 1;
-  background: var(--bg0);
-  border: 1px solid var(--border);
-  border-radius: 7px;
-  color: var(--text);
-  font-family: var(--mono);
-  font-size: .88rem;
-  padding: 10px 14px;
-  outline: none;
-  transition: .2s;
-}
-.wifi-ip-input:focus { border-color: var(--blue); box-shadow: 0 0 0 2px #00b0ff18; color: #fff; }
-.wifi-ip-input::placeholder { color: var(--dim); }
-
-.wifi-status-bar {
-  border-radius: 7px;
-  padding: 9px 14px;
-  font-size: .72rem;
-  letter-spacing: 1px;
-  display: flex; align-items: center; gap: 8px;
-  transition: .3s;
-  background: var(--bg3);
-  border: 1px solid var(--border);
-  color: var(--dim);
-}
-.wifi-status-bar.ok  { border-color: var(--green); color: var(--green); background: #001a0e; }
-.wifi-status-bar.err { border-color: var(--red); color: var(--red); background: #1a000a; }
-.wifi-status-bar.pending { border-color: var(--blue); color: var(--blue); background: #001020; }
-
-/* ═══════════════════════════════════════════
-   BUTTONS
+   BUTTONS — style médical propre
 ═══════════════════════════════════════════ */
 .btn {
   width: 100%;
   font-family: var(--orb);
-  font-weight: 600;
+  font-weight: 700;
   font-size: .72rem;
   letter-spacing: 2px;
   text-transform: uppercase;
@@ -313,28 +269,14 @@ body::before {
   position: relative;
   overflow: hidden;
 }
-.btn::after {
-  content: '';
-  position: absolute; inset: 0;
-  background: linear-gradient(135deg, rgba(255,255,255,.1), transparent);
-  opacity: 0; transition: .2s;
-}
-.btn:hover::after { opacity: 1; }
 .btn:active { transform: scale(.98); }
+.btn:hover { filter: brightness(1.05); }
 
 .btn-green {
   background: linear-gradient(135deg, var(--green), var(--green2));
-  color: #03120a;
+  color: #fff;
   box-shadow: var(--g-green);
 }
-.btn-green:hover { box-shadow: 0 0 20px #00ff8899, 0 0 50px #00ff8833; }
-
-.btn-blue {
-  background: linear-gradient(135deg, #0070cc, #004899);
-  color: #cce8ff;
-  border: 1px solid #0088ff44;
-}
-.btn-blue:hover { box-shadow: 0 0 15px #00b0ff44; }
 
 .btn-red {
   background: linear-gradient(135deg, var(--red), var(--red2));
@@ -344,112 +286,160 @@ body::before {
 
 .btn-ghost {
   background: transparent;
-  border: 1px solid var(--border2);
+  border: 1.5px solid var(--border2);
   color: var(--dim);
   font-size: .65rem;
 }
-.btn-ghost:hover { border-color: var(--green); color: var(--green); }
+.btn-ghost:hover { border-color: var(--green); color: var(--green); background: #f0fff8; }
 
 .btn-ecg-mode {
-  background: var(--bg0);
-  border: 1px solid var(--border2);
-  color: var(--cyan);
+  background: var(--bg2);
+  border: 1.5px solid var(--border2);
+  color: var(--blue);
   letter-spacing: 3px;
   font-size: .7rem;
 }
-.btn-ecg-mode:hover { border-color: var(--cyan); box-shadow: 0 0 15px #00e5ff33; }
+.btn-ecg-mode:hover { border-color: var(--blue); background: #ebf8ff; }
 
 .btn + .btn { margin-top: 10px; }
 .btn[disabled] { opacity: .4; cursor: not-allowed; }
 
 /* ═══════════════════════════════════════════
-   ECG DISPLAY
+   ECG DISPLAY — fond noir type moniteur cardiaque
+   comme dans les images de référence
 ═══════════════════════════════════════════ */
 .ecg-section {
   margin: 16px 16px 0;
-  background: #020810;
-  border: 1px solid var(--border);
+  background: #04090f;
+  border: 1px solid #1a2a3a;
   border-radius: 12px;
   overflow: hidden;
-  position: relative;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.3);
 }
 .ecg-header {
-  padding: 8px 14px;
+  padding: 10px 16px;
   display: flex; align-items: center; justify-content: space-between;
-  border-bottom: 1px solid var(--border);
+  border-bottom: 1px solid #102030;
+  background: #060d17;
 }
 .ecg-label {
   font-family: var(--orb);
-  font-size: .55rem;
+  font-size: .58rem;
   letter-spacing: 2px;
-  color: var(--dim);
+  color: #5580a0;
+}
+.ecg-speed-label {
+  font-size: .55rem;
+  color: #446688;
+  letter-spacing: 1px;
 }
 .ecg-mode-badge {
   font-size: .58rem;
   letter-spacing: 1.5px;
-  padding: 3px 8px;
+  padding: 3px 10px;
   border-radius: 4px;
   border: 1px solid;
+  font-family: var(--orb);
   transition: .3s;
+  font-weight: 600;
 }
-.ecg-mode-badge.normal   { border-color: var(--green); color: var(--green); }
-.ecg-mode-badge.asyst    { border-color: #444; color: #666; }
-.ecg-mode-badge.fv       { border-color: var(--red); color: var(--red); }
-.ecg-mode-badge.tachy    { border-color: var(--orange); color: var(--orange); }
-.ecg-mode-badge.brady    { border-color: var(--yellow); color: var(--yellow); }
+.ecg-mode-badge.normal   { border-color: #00ff88; color: #00ff88; text-shadow: 0 0 8px #00ff8866; }
+.ecg-mode-badge.asyst    { border-color: #446688; color: #446688; }
+.ecg-mode-badge.fv       { border-color: #ff1744; color: #ff1744; text-shadow: 0 0 8px #ff174466; animation: badge-flash .7s infinite; }
+.ecg-mode-badge.tachy    { border-color: #ff6d00; color: #ff6d00; text-shadow: 0 0 8px #ff6d0066; }
+.ecg-mode-badge.brady    { border-color: #ffd600; color: #ffd600; }
+@keyframes badge-flash { 0%,100%{opacity:1} 50%{opacity:.5} }
 
+/* Zone canvas ECG avec grille type moniteur */
 .ecg-canvas-wrap {
   position: relative;
-  height: 140px;
-  background: repeating-linear-gradient(
-    0deg, transparent, transparent 19px, rgba(0,255,136,.04) 20px
-  ),
-  repeating-linear-gradient(
-    90deg, transparent, transparent 19px, rgba(0,255,136,.04) 20px
-  );
+  height: 160px;
+  background:
+    /* Grille petite */
+    repeating-linear-gradient(0deg, transparent, transparent 9px, rgba(0,100,60,.15) 10px),
+    repeating-linear-gradient(90deg, transparent, transparent 9px, rgba(0,100,60,.15) 10px),
+    /* Grille grande */
+    repeating-linear-gradient(0deg, transparent, transparent 49px, rgba(0,140,80,.25) 50px),
+    repeating-linear-gradient(90deg, transparent, transparent 49px, rgba(0,140,80,.25) 50px),
+    #04090f;
 }
 canvas#ecgCanvas { display: block; width: 100%; height: 100%; }
 
-/* Scanning line overlay */
-.ecg-scan {
-  position: absolute; top: 0; bottom: 0;
-  width: 2px;
-  background: linear-gradient(to bottom, transparent, rgba(0,255,136,.3), transparent);
+/* BPM courant affiché en overlay sur l'ECG */
+.ecg-bpm-overlay {
+  position: absolute;
+  top: 8px; right: 12px;
+  font-family: var(--orb);
+  font-size: 2.2rem;
+  font-weight: 900;
+  line-height: 1;
+  transition: color .3s;
+  text-shadow: 0 0 20px currentColor;
+  pointer-events: none;
+}
+.ecg-bpm-overlay.green  { color: #00ff88; }
+.ecg-bpm-overlay.red    { color: #ff1744; }
+.ecg-bpm-overlay.orange { color: #ff6d00; }
+.ecg-bpm-overlay.yellow { color: #ffd600; }
+.ecg-bpm-overlay.dim    { color: #5580a0; }
+
+.ecg-bpm-label {
+  position: absolute;
+  top: 8px; left: 12px;
+  font-size: .55rem;
+  color: #446688;
+  letter-spacing: 2px;
+  font-family: var(--orb);
   pointer-events: none;
 }
 
 /* ═══════════════════════════════════════════
-   STATS BAR
+   ÉTAT CLINIQUE BADGE (sous l'ECG)
+═══════════════════════════════════════════ */
+.etat-bar {
+  margin: 12px 16px 0;
+  padding: 10px 16px;
+  border-radius: 8px;
+  border: 2px solid;
+  display: flex; align-items: center; justify-content: space-between;
+  font-family: var(--orb);
+  font-size: .72rem;
+  letter-spacing: 2px;
+  font-weight: 700;
+  transition: .3s;
+}
+.etat-bar.normal  { border-color: var(--green); color: var(--green); background: #f0fff8; }
+.etat-bar.arrest  { border-color: var(--red); color: var(--red); background: #fff5f5; animation: etat-pulse .8s infinite; }
+.etat-bar.fv      { border-color: var(--orange); color: var(--orange); background: #fffaf0; animation: etat-pulse .5s infinite; }
+.etat-bar.brady   { border-color: var(--yellow); color: var(--yellow); background: #fffff0; }
+.etat-bar.tachy   { border-color: var(--orange); color: var(--orange); background: #fffaf0; }
+.etat-bar.standby { border-color: var(--border2); color: var(--dim); background: var(--bg2); }
+@keyframes etat-pulse { 0%,100%{opacity:1} 50%{opacity:.65} }
+
+/* ═══════════════════════════════════════════
+   STATS BAR — style cartes blanches
 ═══════════════════════════════════════════ */
 .stats-bar {
-  margin: 16px 16px 0;
+  margin: 12px 16px 0;
   display: grid;
   grid-template-columns: 1fr 1fr 1fr;
   gap: 8px;
 }
 .stat-card {
   background: var(--bg1);
-  border: 1px solid var(--border);
+  border: 1.5px solid var(--border);
   border-radius: 10px;
-  padding: 12px 10px;
+  padding: 12px 8px;
   text-align: center;
-  position: relative;
-  overflow: hidden;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.06);
   transition: .3s;
 }
-.stat-card::before {
-  content: '';
-  position: absolute; bottom: 0; left: 0; right: 0; height: 2px;
-  background: var(--green);
-  transform: scaleX(0);
-  transition: .3s;
-}
-.stat-card.active::before { transform: scaleX(1); }
+.stat-card.active { border-color: var(--green); box-shadow: var(--g-green); }
 
 .stat-icon { font-size: 16px; margin-bottom: 4px; }
 .stat-val {
   font-family: var(--orb);
-  font-size: 1.35rem;
+  font-size: 1.3rem;
   font-weight: 700;
   line-height: 1;
   margin-bottom: 4px;
@@ -461,19 +451,18 @@ canvas#ecgCanvas { display: block; width: 100%; height: 100%; }
   color: var(--dim);
   text-transform: uppercase;
 }
-
-.stat-val.green  { color: var(--green); text-shadow: var(--g-green); }
-.stat-val.red    { color: var(--red);   text-shadow: var(--g-red); }
+.stat-val.green  { color: var(--green); }
+.stat-val.red    { color: var(--red); }
 .stat-val.orange { color: var(--orange); }
 .stat-val.yellow { color: var(--yellow); }
 .stat-val.dim    { color: var(--dim); }
-.stat-val.white  { color: #fff; }
+.stat-val.white  { color: var(--text); }
 
 /* ═══════════════════════════════════════════
-   ALERT BANNER
+   ALERT BANNER — fond blanc coloré
 ═══════════════════════════════════════════ */
 .alert-banner {
-  margin: 16px 16px 0;
+  margin: 12px 16px 0;
   border-radius: 10px;
   padding: 12px 16px;
   display: flex; align-items: center; gap: 12px;
@@ -481,38 +470,34 @@ canvas#ecgCanvas { display: block; width: 100%; height: 100%; }
   font-weight: 500;
   letter-spacing: .5px;
   transition: .3s;
-  animation: slideIn .3s ease;
+  border: 1.5px solid;
 }
-@keyframes slideIn { from { opacity:0; transform: translateY(-8px); } to { opacity:1; transform:none; } }
-
-.alert-banner.normal  { background: #001a0e; border: 1px solid var(--green); color: var(--green); }
-.alert-banner.arrest  { background: #1a0008; border: 1px solid var(--red);   color: var(--red); animation: banner-pulse 1s infinite; }
-.alert-banner.fv      { background: #1a0808; border: 1px solid var(--orange); color: var(--orange); animation: banner-pulse .7s infinite; }
-.alert-banner.brady   { background: #1a1400; border: 1px solid var(--yellow); color: var(--yellow); }
-.alert-banner.tachy   { background: #1a0d00; border: 1px solid var(--orange); color: var(--orange); }
-@keyframes banner-pulse { 0%,100%{opacity:1} 50%{opacity:.6} }
+.alert-banner.normal  { background: #f0fff8; border-color: var(--green); color: #276749; }
+.alert-banner.arrest  { background: #fff5f5; border-color: var(--red); color: var(--red2); animation: banner-pulse 1s infinite; }
+.alert-banner.fv      { background: #fffaf0; border-color: var(--orange); color: var(--orange); animation: banner-pulse .7s infinite; }
+.alert-banner.brady   { background: #fffff0; border-color: var(--yellow); color: #b7791f; }
+.alert-banner.tachy   { background: #fffaf0; border-color: var(--orange); color: var(--orange); }
+@keyframes banner-pulse { 0%,100%{opacity:1} 50%{opacity:.7} }
 .alert-icon { font-size: 1.4rem; flex-shrink: 0; }
 .alert-text { line-height: 1.5; }
-.alert-text strong { display: block; font-family: var(--orb); font-size: .65rem; letter-spacing: 2px; margin-bottom: 2px; }
+.alert-text strong { display: block; font-family: var(--orb); font-size: .62rem; letter-spacing: 2px; margin-bottom: 2px; }
 
 /* ═══════════════════════════════════════════
-   RCP STATUS
+   RCP STATUS PANEL
 ═══════════════════════════════════════════ */
 .rcp-panel {
-  margin: 16px 16px 0;
+  margin: 12px 16px 0;
   border-radius: 10px;
   padding: 14px 16px;
   display: flex; align-items: center; gap: 14px;
   transition: .3s;
+  border: 1.5px solid;
 }
-.rcp-panel.off  { background: var(--bg1); border: 1px solid var(--border); }
-.rcp-panel.on   { background: #14000a; border: 1px solid var(--red); box-shadow: var(--g-red); animation: rcp-pulse .5s infinite alternate; }
-@keyframes rcp-pulse { from{box-shadow:var(--g-red)} to{box-shadow: 0 0 30px #ff174488, 0 0 60px #ff174444} }
+.rcp-panel.off  { background: var(--bg1); border-color: var(--border); }
+.rcp-panel.on   { background: #fff5f5; border-color: var(--red); box-shadow: var(--g-red); animation: rcp-pulse .6s infinite alternate; }
+@keyframes rcp-pulse { from{box-shadow:var(--g-red)} to{box-shadow: 0 4px 24px rgba(229,62,62,.4)} }
 
-.rcp-heart {
-  font-size: 2rem;
-  flex-shrink: 0;
-}
+.rcp-heart { font-size: 2rem; flex-shrink: 0; }
 .rcp-panel.on .rcp-heart { animation: heartbeat .5s infinite alternate; }
 @keyframes heartbeat { from{transform:scale(1)} to{transform:scale(1.25)} }
 
@@ -526,30 +511,35 @@ canvas#ecgCanvas { display: block; width: 100%; height: 100%; }
 .rcp-panel.off .rcp-status { color: var(--dim); }
 .rcp-panel.on  .rcp-status { color: var(--red); }
 .rcp-details { font-size: .7rem; color: var(--dim); line-height: 1.5; }
-.rcp-panel.on .rcp-details { color: #ffaaaa; }
+.rcp-panel.on .rcp-details { color: var(--red2); }
 
 /* ═══════════════════════════════════════════
    ECG MODE SWITCHER
 ═══════════════════════════════════════════ */
 .ecg-mode-section {
   margin: 16px 16px 0;
+  background: var(--bg1);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 14px 16px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.06);
 }
 .ecg-mode-dots {
-  display: flex; justify-content: center; gap: 6px; margin-top: 10px;
+  display: flex; justify-content: center; gap: 8px; margin-top: 10px;
 }
 .ecg-mode-dot {
-  width: 6px; height: 6px; border-radius: 50%;
+  width: 8px; height: 8px; border-radius: 50%;
   background: var(--border2);
   transition: .3s;
 }
-.ecg-mode-dot.active { background: var(--cyan); box-shadow: 0 0 6px var(--cyan); }
+.ecg-mode-dot.active { background: var(--blue); box-shadow: 0 0 6px rgba(49,130,206,.5); }
 
 /* ═══════════════════════════════════════════
    PREGNANCY ALERT MODAL
 ═══════════════════════════════════════════ */
 .modal-overlay {
   position: fixed; inset: 0; z-index: 200;
-  background: rgba(4,8,15,.9);
+  background: rgba(0,0,0,.5);
   backdrop-filter: blur(4px);
   display: flex; align-items: center; justify-content: center;
   padding: 20px;
@@ -558,14 +548,14 @@ canvas#ecgCanvas { display: block; width: 100%; height: 100%; }
 .modal-overlay.visible { opacity: 1; pointer-events: auto; }
 .modal-box {
   background: var(--bg1);
-  border: 1px solid var(--orange);
+  border: 2px solid var(--orange);
   border-radius: 14px;
   padding: 24px;
   max-width: 380px; width: 100%;
   box-shadow: var(--g-orange);
 }
 .modal-title { font-family: var(--orb); font-size: .8rem; letter-spacing: 2px; color: var(--orange); margin-bottom: 12px; }
-.modal-body { font-size: .82rem; line-height: 1.8; color: var(--text); margin-bottom: 18px; }
+.modal-body { font-size: .82rem; line-height: 1.8; color: var(--text2); margin-bottom: 18px; }
 .modal-body strong { color: var(--orange); }
 
 /* ═══════════════════════════════════════════
@@ -587,12 +577,12 @@ canvas#ecgCanvas { display: block; width: 100%; height: 100%; }
 }
 @keyframes fadeUp { from{opacity:0;transform:translateY(4px)} to{opacity:1;transform:none} }
 .hist-id   { color: var(--dim); font-size:.6rem; }
-.hist-etat { font-weight: 500; }
+.hist-etat { font-weight: 600; }
 .hist-bpm  { font-family: var(--orb); font-size: .7rem; }
 .hist-time { color: var(--dim); }
 
 .hist-etat.normal { color: var(--green); }
-.hist-etat.asystolie { color: #555; }
+.hist-etat.asystolie { color: #a0aec0; }
 .hist-etat.fv { color: var(--red); }
 .hist-etat.tachycardie { color: var(--orange); }
 .hist-etat.bradycardie { color: var(--yellow); }
@@ -602,7 +592,7 @@ canvas#ecgCanvas { display: block; width: 100%; height: 100%; }
   color: var(--dim);
   text-align: center;
   padding: 16px;
-  border: 1px dashed var(--border);
+  border: 1px dashed var(--border2);
   border-radius: 7px;
 }
 
@@ -612,14 +602,14 @@ canvas#ecgCanvas { display: block; width: 100%; height: 100%; }
 #toast {
   position: fixed;
   bottom: 20px; left: 50%; transform: translateX(-50%) translateY(80px);
-  background: var(--bg2);
-  border: 1px solid var(--green);
+  background: var(--bg1);
+  border: 1.5px solid var(--green);
   border-radius: 8px;
   padding: 10px 20px;
   font-size: .75rem;
   letter-spacing: 1px;
   color: var(--green);
-  box-shadow: var(--g-green);
+  box-shadow: var(--g-green), 0 4px 16px rgba(0,0,0,.12);
   z-index: 300;
   transition: .3s;
   pointer-events: none;
@@ -675,9 +665,9 @@ canvas#ecgCanvas { display: block; width: 100%; height: 100%; }
         <div class="header-sub">DISPOSITIF RCP · SIMULATION ECG · ERC/AHA</div>
       </div>
     </div>
-    <div class="wifi-badge disconnected" id="wifiBadge">
-      <div class="wifi-dot"></div>
-      <span id="wifiLabel">WiFi</span>
+    <div class="fb-badge" id="fbBadge">
+      <div class="fb-dot"></div>
+      <span id="fbLabel">Firebase</span>
     </div>
   </header>
 
@@ -727,27 +717,7 @@ canvas#ecgCanvas { display: block; width: 100%; height: 100%; }
     </div>
   </div>
 
-  <!-- ▸ SECTION 2 — WiFi CONNECTION -->
-  <div class="section">
-    <div class="section-header">
-      <span class="section-icon">📶</span>
-      Connexion WiFi — ESP32
-    </div>
-    <div class="section-body">
-      <div class="wifi-input-row">
-        <input class="wifi-ip-input" type="text" id="esp32ip"
-               placeholder="192.168.1.xx  (IP de l'ESP32)" value="192.168.1.100">
-        <button class="btn btn-blue" style="width:auto;padding:10px 16px;font-size:.62rem;" onclick="connectWifi()">
-          📶 Connect
-        </button>
-      </div>
-      <div class="wifi-status-bar" id="wifiStatus">
-        📡 En attente de connexion WiFi…
-      </div>
-    </div>
-  </div>
-
-  <!-- ▸ START MONITORING -->
+  <!-- ▸ START / STOP MONITORING -->
   <div style="margin:16px 16px 0;">
     <button class="btn btn-green" id="btnStart" onclick="startMonitoring()" disabled>
       ▶ Start Monitoring
@@ -757,15 +727,26 @@ canvas#ecgCanvas { display: block; width: 100%; height: 100%; }
     </button>
   </div>
 
-  <!-- ▸ ECG SIGNAL DISPLAY -->
+  <!-- ▸ ECG SIGNAL DISPLAY — style moniteur cardiaque fond noir -->
   <div class="ecg-section" id="ecgSection">
     <div class="ecg-header">
-      <div class="ecg-label">❤️ ECG SIGNAL DISPLAY · SIMULATION</div>
+      <div>
+        <div class="ecg-label">ECG SIGNAL DISPLAY</div>
+        <div class="ecg-speed-label">25 mm/s</div>
+      </div>
       <div class="ecg-mode-badge normal" id="ecgModeBadge">NORMAL ECG</div>
     </div>
     <div class="ecg-canvas-wrap">
+      <div class="ecg-bpm-label">BPM COURANT</div>
+      <div class="ecg-bpm-overlay dim" id="ecgBpmOverlay">—</div>
       <canvas id="ecgCanvas"></canvas>
     </div>
+  </div>
+
+  <!-- ▸ ÉTAT CLINIQUE -->
+  <div class="etat-bar standby" id="etatBar">
+    <span id="etatLabel">STANDBY</span>
+    <span id="etatIcon">📡</span>
   </div>
 
   <!-- ▸ STATS BAR -->
@@ -789,10 +770,10 @@ canvas#ecgCanvas { display: block; width: 100%; height: 100%; }
 
   <!-- ▸ ALERT BANNER -->
   <div class="alert-banner normal" id="alertBanner">
-    <div class="alert-icon">✅</div>
+    <div class="alert-icon">📡</div>
     <div class="alert-text">
-      <strong>SURVEILLANCE ACTIVE</strong>
-      En attente de données ECG…
+      <strong>EN ATTENTE</strong>
+      Appuyez sur Start Monitoring pour commencer
     </div>
   </div>
 
@@ -808,7 +789,7 @@ canvas#ecgCanvas { display: block; width: 100%; height: 100%; }
   <!-- ▸ ECG MODE SWITCHER -->
   <div class="ecg-mode-section">
     <button class="btn btn-ecg-mode" onclick="cycleEcgMode()">
-      ⇄ ECG Mode
+      ⇄ Changer Mode ECG
     </button>
     <div class="ecg-mode-dots">
       <div class="ecg-mode-dot active" id="dot-0"></div>
@@ -839,14 +820,14 @@ canvas#ecgCanvas { display: block; width: 100%; height: 100%; }
   <div class="app-footer">
     SMART CPR ASSISTANT · SIMULATION ECG ARTIFICIELLE<br>
     CONFORME ERC / AHA · ADULTE 16–110 ANS<br>
-    WiFi ESP32 · Firebase Firestore
+    Firebase Firestore · Dispositif RCP Adulte v2.0
   </div>
 </div>
 
 <div id="toast"></div>
 
 <!-- ══════════════════════════════════════════════════════
-     JAVASCRIPT — Algorithme RCP + ECG Simulation + WiFi
+     JAVASCRIPT — Algorithme RCP + ECG Simulation
 ══════════════════════════════════════════════════════ -->
 <script>
 /* ═══════════════════════════════════════
@@ -855,10 +836,8 @@ canvas#ecgCanvas { display: block; width: 100%; height: 100%; }
 const S = {
   patient: null,
   algo: null,
-  wifiOk: false,
-  esp32ip: '192.168.1.100',
   monitoring: false,
-  ecgMode: 0,         // 0=normal 1=asystolie 2=fv 3=tachycardie 4=bradycardie
+  ecgMode: 0,
   bpm: 0,
   massageActif: false,
   sessionId: null,
@@ -906,7 +885,8 @@ function calcAlgo(age, sexe, morpho) {
 }
 
 /* ═══════════════════════════════════════
-   FORM CHANGE
+   FORM CHANGE — connexion WiFi supprimée
+   Le bouton Start est activé dès que le formulaire est valide
 ═══════════════════════════════════════ */
 function onFormChange() {
   const age   = parseInt(document.getElementById('age').value);
@@ -925,59 +905,7 @@ function onFormChange() {
   document.getElementById('a-prof').textContent = a.profondeur + ' cm';
   document.getElementById('a-force').textContent = a.force;
   document.getElementById('a-fg-warn').style.display = sexe==='FG'?'flex':'none';
-  document.getElementById('btnStart').disabled = !S.wifiOk;
-}
-
-/* ═══════════════════════════════════════
-   WiFi CONNECTION (simulation — fetch ESP32)
-═══════════════════════════════════════ */
-async function connectWifi() {
-  const ip = document.getElementById('esp32ip').value.trim();
-  if(!ip){ toast('Entrez l\'adresse IP de l\'ESP32', true); return; }
-  S.esp32ip = ip;
-
-  setWifiUI('connecting','⏳ Connexion en cours…');
-
-  /* Tentative fetch vers l'ESP32 — /ping endpoint
-     En simulation, on simule après 1.2s             */
-  try {
-    const ctrl = new AbortController();
-    const timer = setTimeout(()=>ctrl.abort(), 3000);
-    const resp  = await fetch(`http://${ip}/ping`, { signal: ctrl.signal, mode:'no-cors' });
-    clearTimeout(timer);
-    onWifiOk(ip);
-  } catch(e) {
-    /* En simulation, on accepte quand même si "ESP32 simulation mode" */
-    if(e.name==='AbortError'||e.message.includes('Failed to fetch')||e.message.includes('NetworkError')){
-      /* Simulation: on suppose l'ESP32 connecté sur le réseau local */
-      onWifiOk(ip, true);
-    } else {
-      onWifiFail();
-    }
-  }
-}
-
-function onWifiOk(ip, sim=false) {
-  S.wifiOk = true;
-  const msg = sim ? `✅ WiFi Connected ✓ (${ip}) [SIM]` : `✅ WiFi Connected ✓ (${ip})`;
-  setWifiUI('connected', msg);
-  document.getElementById('btnStart').disabled = !formValid();
-  toast('WiFi Connected ✓');
-}
-function onWifiFail() {
-  S.wifiOk = false;
-  setWifiUI('error','✗ WiFi Disconnected — Vérifiez l\'IP et le réseau');
-  toast('Connexion échouée', true);
-}
-
-function setWifiUI(state, msg) {
-  const badge = document.getElementById('wifiBadge');
-  const status = document.getElementById('wifiStatus');
-  const lbl = document.getElementById('wifiLabel');
-  badge.className = 'wifi-badge ' + (state==='connected'?'connected':state==='connecting'?'connecting':'disconnected');
-  lbl.textContent  = state==='connected'?'Connected':state==='connecting'?'…':'WiFi';
-  status.className = 'wifi-status-bar ' + (state==='connected'?'ok':state==='connecting'?'pending':'err');
-  status.textContent = msg;
+  document.getElementById('btnStart').disabled = false; // Pas besoin de WiFi
 }
 
 function formValid() {
@@ -1028,7 +956,6 @@ async function _launch(age, sexe, morpho) {
         BPM_max: S.algo.BPM_max,
         profondeur: S.algo.profondeur,
         force: S.algo.force,
-        esp32ip: S.esp32ip,
         timestamp: window.FB.serverTimestamp()
       });
       S.sessionId = ref.id;
@@ -1056,7 +983,7 @@ function stopMonitoring() {
    ECG CANVAS SETUP
 ═══════════════════════════════════════ */
 let ecgBuf=[], ecgHead=0;
-const W=440, H=140;
+const W=440, H=160;
 
 function initEcgCanvas() {
   const c = document.getElementById('ecgCanvas');
@@ -1088,7 +1015,7 @@ function genSample(t) {
       const per=1.6; const ph=(t%per)/per;
       return qrs(ph)*.9;
     }
-    default: { /* normal ~72 BPM */
+    default: {
       const per=0.83; const ph=(t%per)/per;
       return qrs(ph);
     }
@@ -1097,11 +1024,11 @@ function genSample(t) {
 
 function qrs(p) {
   const g=(c,s)=>Math.exp(-((p-c)**2)/(2*s*s));
-  return .1*g(.14,.055)          /* P  */
-       - .14*g(.30,.016)         /* Q  */
-       + 1.0*g(.34,.018)         /* R  */
-       - .22*g(.375,.016)        /* S  */
-       + .28*g(.55,.065);        /* T  */
+  return .1*g(.14,.055)
+       - .14*g(.30,.016)
+       + 1.0*g(.34,.018)
+       - .22*g(.375,.016)
+       + .28*g(.55,.065);
 }
 
 /* ═══════════════════════════════════════
@@ -1114,7 +1041,7 @@ function ecgLoop() {
   const now = Date.now();
   const t = now/1000;
   const samp = genSample(t);
-  ecgBuf[ecgHead % W] = H/2 - samp*(H*.36);
+  ecgBuf[ecgHead % W] = H/2 - samp*(H*.40);
   ecgHead++;
 
   drawEcg();
@@ -1122,35 +1049,53 @@ function ecgLoop() {
 }
 
 /* ═══════════════════════════════════════
-   DRAW ECG
+   DRAW ECG — style moniteur cardiaque pro
+   Fond noir, grille verte, trace lumineux
 ═══════════════════════════════════════ */
 function drawEcg() {
   const c = document.getElementById('ecgCanvas');
   const ctx = c.getContext('2d');
   const mode = ECG_MODES[S.ecgMode].key;
 
-  ctx.fillStyle='#020810';
+  /* Fond noir opaque */
+  ctx.fillStyle = '#04090f';
   ctx.fillRect(0,0,W,H);
 
-  /* trace color */
-  const col = mode==='asystolie'?'#445566':mode==='fv'?'#ff1744':mode==='tachycardie'?'#ff6d00':mode==='bradycardie'?'#ffd600':'#00ff88';
+  /* Couleur du tracé selon le mode (comme dans les images) */
+  const col = mode==='asystolie' ? '#2255aa'
+             : mode==='fv'        ? '#ff1744'
+             : mode==='tachycardie'? '#ff6d00'
+             : mode==='bradycardie'? '#ffd600'
+             : '#00ff88'; // normal = vert vif
 
-  ctx.strokeStyle=col;
-  ctx.lineWidth=2;
-  ctx.shadowColor=col; ctx.shadowBlur=8;
+  /* Tracé ECG avec glow */
+  ctx.strokeStyle = col;
+  ctx.lineWidth = 2.2;
+  ctx.shadowColor = col;
+  ctx.shadowBlur = 10;
+  ctx.lineJoin = 'round';
+  ctx.lineCap = 'round';
+
   ctx.beginPath();
-  for(let i=0;i<W;i++){
-    const xi=(ecgHead+i)%W;
-    const y=ecgBuf[xi];
-    i===0?ctx.moveTo(i,y):ctx.lineTo(i,y);
+  for(let i=0; i<W; i++){
+    const xi = (ecgHead+i) % W;
+    const y = ecgBuf[xi];
+    i===0 ? ctx.moveTo(i,y) : ctx.lineTo(i,y);
   }
   ctx.stroke();
-  ctx.shadowBlur=0;
+  ctx.shadowBlur = 0;
 
-  /* scan blackout */
-  const sx=ecgHead%W;
-  ctx.fillStyle='rgba(2,8,16,.85)';
-  ctx.fillRect(sx,0,12,H);
+  /* Zone de scan (masque de progression) */
+  const sx = ecgHead % W;
+  ctx.fillStyle = '#04090f';
+  ctx.fillRect(sx, 0, 14, H);
+  /* Ligne de scan blanche */
+  ctx.strokeStyle = 'rgba(255,255,255,0.25)';
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(sx+14, 0);
+  ctx.lineTo(sx+14, H);
+  ctx.stroke();
 }
 
 /* ═══════════════════════════════════════
@@ -1182,7 +1127,6 @@ function runAlgo(samp, now) {
     window.FB.addDoc(window.FB.collection(window.FB.db,'sessions'),{
       patientId: S.sessionId,
       bpm, etat, massageActif: massage,
-      esp32ip: S.esp32ip,
       timestamp: window.FB.serverTimestamp()
     }).catch(()=>{});
   }
@@ -1192,7 +1136,13 @@ function runAlgo(samp, now) {
    UPDATE UI
 ═══════════════════════════════════════ */
 function updateUI(bpm, etat, massage) {
-  /* BPM */
+  /* BPM courant sur overlay ECG */
+  const overlay = document.getElementById('ecgBpmOverlay');
+  overlay.textContent = bpm>0 ? bpm : '—';
+  const overlayCol = massage?'red':bpm<(S.algo?.BPM_min||60)?'yellow':bpm>(S.algo?.BPM_max||100)?'orange':'green';
+  overlay.className = 'ecg-bpm-overlay ' + overlayCol;
+
+  /* BPM stat card */
   const svBpm=document.getElementById('sv-bpm');
   svBpm.textContent = bpm>0?bpm:'—';
   svBpm.className = 'stat-val '+(massage?'red':bpm<(S.algo?.BPM_min||60)?'yellow':bpm>(S.algo?.BPM_max||100)?'orange':'green');
@@ -1208,14 +1158,30 @@ function updateUI(bpm, etat, massage) {
   svRcp.textContent=massage?'ON':'OFF';
   svRcp.className='stat-val '+(massage?'red':'dim');
 
+  /* Barre état clinique */
+  const etatBar=document.getElementById('etatBar');
+  const etatLabel=document.getElementById('etatLabel');
+  const etatIcon=document.getElementById('etatIcon');
+  const etatMap = {
+    normal:    ['RYTHME NORMAL',               'normal',  '✅'],
+    asystolie: ['ARRÊT CARDIAQUE',             'arrest',  '⛔'],
+    fv:        ['FIBRILLATION VENTRICULAIRE',  'fv',      '⚡'],
+    tachycardie:['TACHYCARDIE',                'tachy',   '⚠️'],
+    bradycardie:['BRADYCARDIE',                'brady',   '🔻'],
+  };
+  const [etxt, ecls, eico] = etatMap[etat] || ['STANDBY', 'standby', '📡'];
+  etatBar.className = 'etat-bar ' + ecls;
+  etatLabel.textContent = etxt;
+  etatIcon.textContent = eico;
+
   /* Alert banner */
   const banner=document.getElementById('alertBanner');
   const bannerData = {
-    normal:    ['normal',  '✅',  'RYTHME NORMAL',               '✓ Normal rhythm detected — RCP OFF'],
-    asystolie: ['arrest',  '⛔',  'ARRÊT CARDIAQUE DÉTECTÉ',      '⚠ Cardiac arrest — RCP Started'],
-    fv:        ['fv',      '⚡',  'FIBRILLATION VENTRICULAIRE',   '⚠ Ventricular fibrillation — ⚡ Shock recommended'],
-    tachycardie:['tachy',  '⚠️',  'TACHYCARDIE',                  '⚠ Tachycardia detected — Prepare defibrillator'],
-    bradycardie:['brady',  '🔻', 'BRADYCARDIE',                  '⚠ Bradycardia detected — Prepare defibrillator'],
+    normal:    ['normal',  '✅',  'RYTHME NORMAL',               '✓ Rythme normal détecté — RCP INACTIF'],
+    asystolie: ['arrest',  '⛔',  'ARRÊT CARDIAQUE DÉTECTÉ',      '⚠ Arrêt cardiaque — RCP démarré'],
+    fv:        ['fv',      '⚡',  'FIBRILLATION VENTRICULAIRE',   '⚠ Fibrillation — ⚡ Choc électrique recommandé'],
+    tachycardie:['tachy',  '⚠️',  'TACHYCARDIE',                  '⚠ Tachycardie détectée — Préparer défibrillateur'],
+    bradycardie:['brady',  '🔻', 'BRADYCARDIE',                  '⚠ Bradycardie détectée — Préparer défibrillateur'],
   };
   const [banCls,icon,title,body]=bannerData[etat]||bannerData.normal;
   banner.className='alert-banner '+banCls;
@@ -1231,7 +1197,7 @@ function updateUI(bpm, etat, massage) {
   if(massage && S.algo) {
     details.textContent=`${S.algo.freq_comp} comp/min · ${S.algo.profondeur} cm · Force : ${S.algo.force}`;
   } else {
-    const msgs={normal:'✓ Normal rhythm detected — Surveillance continue',
+    const msgs={normal:'✓ Rythme normal — Surveillance continue',
       tachycardie:'Tachycardie — Positionner le défibrillateur',
       bradycardie:'Bradycardie — Préparer le défibrillateur',
       asystolie:'Démarrage RCP…', fv:'⚡ Choc électrique recommandé'};
@@ -1244,6 +1210,11 @@ function setStatsDefault() {
     document.getElementById(id).textContent='—';
     document.getElementById(id).className='stat-val dim';
   });
+  const overlay=document.getElementById('ecgBpmOverlay');
+  overlay.textContent='—'; overlay.className='ecg-bpm-overlay dim';
+  document.getElementById('etatBar').className='etat-bar standby';
+  document.getElementById('etatLabel').textContent='STANDBY';
+  document.getElementById('etatIcon').textContent='📡';
   document.getElementById('rcpPanel').className='rcp-panel off';
   document.getElementById('rcpPanel').querySelector('.rcp-heart').textContent='💚';
   document.getElementById('rcpPanel').querySelector('.rcp-status').textContent='RCP : INACTIVE';
@@ -1259,13 +1230,10 @@ function setStatsDefault() {
 function cycleEcgMode() {
   S.ecgMode=(S.ecgMode+1)%ECG_MODES.length;
   const m=ECG_MODES[S.ecgMode];
-  /* Mode badge */
   const badge=document.getElementById('ecgModeBadge');
   badge.className='ecg-mode-badge '+m.cls;
   badge.textContent=m.badge;
-  /* Dots */
   for(let i=0;i<5;i++) document.getElementById('dot-'+i).className='ecg-mode-dot'+(i===S.ecgMode?' active':'');
-  /* Label */
   document.getElementById('ecgModeLabel').textContent=`MODE ${S.ecgMode+1}/5 · ${m.label}`;
   toast('Signal: '+m.label);
 }
@@ -1311,12 +1279,17 @@ function toast(msg, err=false) {
 }
 
 /* ═══════════════════════════════════════
-   FIREBASE READY
+   FIREBASE READY — badge header
 ═══════════════════════════════════════ */
 document.addEventListener('fbReady',()=>{
+  const badge=document.getElementById('fbBadge');
+  const lbl=document.getElementById('fbLabel');
   if(window.FB?.ok) {
+    badge.className='fb-badge connected';
+    lbl.textContent='Firebase ✓';
     toast('Firebase connecté ✓');
   } else {
+    lbl.textContent='Firebase —';
     console.warn('Firebase non configuré — mode local');
   }
 });
