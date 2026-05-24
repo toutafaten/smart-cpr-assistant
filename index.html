@@ -1,0 +1,1328 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Smart CPR Assistant</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&family=JetBrains+Mono:wght@300;400;500;700&display=swap" rel="stylesheet">
+
+<!-- ══════════ FIREBASE SDK ══════════ -->
+<script type="module">
+  import { initializeApp }
+    from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+  import { getFirestore, collection, addDoc, onSnapshot,
+           query, orderBy, limit, serverTimestamp, doc, setDoc }
+    from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+  /* ╔══════════════════════════════════════════════════╗
+     ║   🔧 VOTRE CONFIGURATION FIREBASE               ║
+     ║   Console Firebase → Paramètres → Vos apps      ║
+     ╚══════════════════════════════════════════════════╝ */
+  const firebaseConfig = {
+    apiKey:            "AIzaSyCr1z2sKAo_lkKA-_dJQNMUK_8jQEj3XVI",
+    authDomain:        "dispositif-rcp.firebaseapp.com",
+    projectId:         "dispositif-rcp",
+    storageBucket:     "dispositif-rcp.firebasestorage.app",
+    messagingSenderId: "191283454870",
+    appId:             "1:191283454870:web:ccbd2574c9bd6d025533b7"
+  };
+
+  try {
+    const app = initializeApp(firebaseConfig);
+    const db  = getFirestore(app);
+    window.FB = { db, collection, addDoc, onSnapshot, query, orderBy, limit, serverTimestamp, doc, setDoc, ok: true };
+  } catch(e) {
+    window.FB = { ok: false, err: e.message };
+  }
+  document.dispatchEvent(new Event("fbReady"));
+</script>
+
+<style>
+/* ═══════════════════════════════════════════
+   RESET & CSS VARIABLES
+═══════════════════════════════════════════ */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --bg0:    #04080f;
+  --bg1:    #070d18;
+  --bg2:    #0a1220;
+  --bg3:    #0e1a2e;
+  --green:  #00ff88;
+  --green2: #00cc6a;
+  --red:    #ff1744;
+  --red2:   #c4001d;
+  --orange: #ff6d00;
+  --yellow: #ffd600;
+  --blue:   #00b0ff;
+  --cyan:   #00e5ff;
+  --text:   #b0cce0;
+  --dim:    #3a5870;
+  --border: #0d2a40;
+  --border2:#153550;
+  --orb:    'Orbitron', sans-serif;
+  --mono:   'JetBrains Mono', monospace;
+  --g-green: 0 0 10px #00ff8866, 0 0 30px #00ff8822;
+  --g-red:   0 0 10px #ff174466, 0 0 30px #ff174422;
+  --g-orange:0 0 10px #ff6d0066, 0 0 30px #ff6d0022;
+}
+
+html { scroll-behavior: smooth; }
+body {
+  background: var(--bg0);
+  color: var(--text);
+  font-family: var(--mono);
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* ═══ ANIMATED BACKGROUND ═══ */
+body::before {
+  content: '';
+  position: fixed; inset: 0; z-index: 0; pointer-events: none;
+  background:
+    radial-gradient(ellipse 60% 40% at 50% 0%, #001a3322 0%, transparent 70%),
+    linear-gradient(rgba(0,255,136,.018) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0,255,136,.018) 1px, transparent 1px);
+  background-size: auto, 50px 50px, 50px 50px;
+}
+
+/* ═══ SCROLLBAR ═══ */
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-track { background: var(--bg1); }
+::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 2px; }
+
+/* ═══════════════════════════════════════════
+   LAYOUT WRAPPER
+═══════════════════════════════════════════ */
+.app {
+  max-width: 480px;
+  margin: 0 auto;
+  padding: 0 0 40px;
+  position: relative; z-index: 1;
+}
+
+/* ═══════════════════════════════════════════
+   HEADER
+═══════════════════════════════════════════ */
+.header {
+  background: var(--bg1);
+  border-bottom: 1px solid var(--border);
+  padding: 14px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: sticky; top: 0; z-index: 100;
+  backdrop-filter: blur(10px);
+}
+
+.header-brand {
+  display: flex; align-items: center; gap: 10px;
+}
+.header-logo {
+  width: 36px; height: 36px;
+  background: radial-gradient(circle, #00ff8833, #00ff8800);
+  border: 1.5px solid var(--green);
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 16px;
+  box-shadow: var(--g-green);
+  animation: pulse-logo 3s ease-in-out infinite;
+}
+@keyframes pulse-logo {
+  0%,100% { box-shadow: var(--g-green); }
+  50% { box-shadow: 0 0 20px #00ff8899, 0 0 50px #00ff8833; }
+}
+.header-title {
+  font-family: var(--orb);
+  font-size: .75rem;
+  font-weight: 700;
+  letter-spacing: 2px;
+  color: var(--green);
+  line-height: 1.2;
+  text-shadow: var(--g-green);
+}
+.header-sub {
+  font-size: .55rem;
+  color: var(--dim);
+  letter-spacing: 1px;
+  margin-top: 1px;
+}
+
+/* WiFi status badge */
+.wifi-badge {
+  display: flex; align-items: center; gap: 6px;
+  padding: 5px 10px;
+  border-radius: 20px;
+  border: 1px solid var(--border);
+  font-size: .62rem; letter-spacing: 1px;
+  transition: .3s;
+  cursor: default;
+}
+.wifi-badge.connected { border-color: var(--green); color: var(--green); box-shadow: var(--g-green); }
+.wifi-badge.disconnected { border-color: var(--dim); color: var(--dim); }
+.wifi-badge.connecting { border-color: var(--blue); color: var(--blue); }
+.wifi-dot {
+  width: 6px; height: 6px; border-radius: 50%;
+  background: currentColor;
+}
+.wifi-badge.connected .wifi-dot { animation: blink-dot 1.5s infinite; }
+.wifi-badge.connecting .wifi-dot { animation: blink-dot .5s infinite; }
+@keyframes blink-dot { 0%,100%{opacity:1} 50%{opacity:.2} }
+
+/* ═══════════════════════════════════════════
+   SECTION BLOCKS
+═══════════════════════════════════════════ */
+.section {
+  margin: 16px 16px 0;
+  background: var(--bg1);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  overflow: hidden;
+  position: relative;
+}
+.section::before {
+  content: '';
+  position: absolute; top: 0; left: 0; right: 0; height: 1px;
+  background: linear-gradient(90deg, transparent 0%, var(--green) 30%, var(--cyan) 70%, transparent 100%);
+  opacity: .4;
+}
+
+.section-header {
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; gap: 8px;
+  font-family: var(--orb);
+  font-size: .6rem;
+  letter-spacing: 2.5px;
+  color: var(--dim);
+  text-transform: uppercase;
+}
+.section-icon { font-size: 14px; }
+.section-body { padding: 16px; }
+
+/* ═══════════════════════════════════════════
+   FORM FIELDS
+═══════════════════════════════════════════ */
+.field { margin-bottom: 14px; }
+.field:last-child { margin-bottom: 0; }
+.field-label {
+  display: block;
+  font-size: .62rem;
+  letter-spacing: 1.5px;
+  color: var(--dim);
+  text-transform: uppercase;
+  margin-bottom: 6px;
+}
+.field-input, .field-select {
+  width: 100%;
+  background: var(--bg0);
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  color: var(--text);
+  font-family: var(--mono);
+  font-size: .9rem;
+  padding: 10px 14px;
+  outline: none;
+  transition: .2s;
+  appearance: none;
+  -webkit-appearance: none;
+}
+.field-input:focus, .field-select:focus {
+  border-color: var(--green);
+  box-shadow: 0 0 0 2px #00ff8818;
+  color: #fff;
+}
+.field-select {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%233a5870' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 14px center;
+  padding-right: 36px;
+  cursor: pointer;
+}
+.field-select option { background: #0a1220; }
+
+/* Algo preview */
+.algo-box {
+  background: var(--bg0);
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  padding: 12px 14px;
+  font-size: .72rem;
+  line-height: 1.9;
+  margin-top: 14px;
+  display: none;
+}
+.algo-box.visible { display: block; }
+.algo-row { display: flex; justify-content: space-between; align-items: center; }
+.algo-key { color: var(--dim); }
+.algo-val { color: var(--green); font-weight: 500; }
+.algo-warn { color: var(--orange); }
+
+/* ═══════════════════════════════════════════
+   WIFI CONNECTION
+═══════════════════════════════════════════ */
+.wifi-input-row {
+  display: flex; gap: 8px; align-items: center;
+  margin-bottom: 12px;
+}
+.wifi-ip-input {
+  flex: 1;
+  background: var(--bg0);
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  color: var(--text);
+  font-family: var(--mono);
+  font-size: .88rem;
+  padding: 10px 14px;
+  outline: none;
+  transition: .2s;
+}
+.wifi-ip-input:focus { border-color: var(--blue); box-shadow: 0 0 0 2px #00b0ff18; color: #fff; }
+.wifi-ip-input::placeholder { color: var(--dim); }
+
+.wifi-status-bar {
+  border-radius: 7px;
+  padding: 9px 14px;
+  font-size: .72rem;
+  letter-spacing: 1px;
+  display: flex; align-items: center; gap: 8px;
+  transition: .3s;
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  color: var(--dim);
+}
+.wifi-status-bar.ok  { border-color: var(--green); color: var(--green); background: #001a0e; }
+.wifi-status-bar.err { border-color: var(--red); color: var(--red); background: #1a000a; }
+.wifi-status-bar.pending { border-color: var(--blue); color: var(--blue); background: #001020; }
+
+/* ═══════════════════════════════════════════
+   BUTTONS
+═══════════════════════════════════════════ */
+.btn {
+  width: 100%;
+  font-family: var(--orb);
+  font-weight: 600;
+  font-size: .72rem;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  padding: 13px 20px;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: .2s;
+  position: relative;
+  overflow: hidden;
+}
+.btn::after {
+  content: '';
+  position: absolute; inset: 0;
+  background: linear-gradient(135deg, rgba(255,255,255,.1), transparent);
+  opacity: 0; transition: .2s;
+}
+.btn:hover::after { opacity: 1; }
+.btn:active { transform: scale(.98); }
+
+.btn-green {
+  background: linear-gradient(135deg, var(--green), var(--green2));
+  color: #03120a;
+  box-shadow: var(--g-green);
+}
+.btn-green:hover { box-shadow: 0 0 20px #00ff8899, 0 0 50px #00ff8833; }
+
+.btn-blue {
+  background: linear-gradient(135deg, #0070cc, #004899);
+  color: #cce8ff;
+  border: 1px solid #0088ff44;
+}
+.btn-blue:hover { box-shadow: 0 0 15px #00b0ff44; }
+
+.btn-red {
+  background: linear-gradient(135deg, var(--red), var(--red2));
+  color: #fff;
+  box-shadow: var(--g-red);
+}
+
+.btn-ghost {
+  background: transparent;
+  border: 1px solid var(--border2);
+  color: var(--dim);
+  font-size: .65rem;
+}
+.btn-ghost:hover { border-color: var(--green); color: var(--green); }
+
+.btn-ecg-mode {
+  background: var(--bg0);
+  border: 1px solid var(--border2);
+  color: var(--cyan);
+  letter-spacing: 3px;
+  font-size: .7rem;
+}
+.btn-ecg-mode:hover { border-color: var(--cyan); box-shadow: 0 0 15px #00e5ff33; }
+
+.btn + .btn { margin-top: 10px; }
+.btn[disabled] { opacity: .4; cursor: not-allowed; }
+
+/* ═══════════════════════════════════════════
+   ECG DISPLAY
+═══════════════════════════════════════════ */
+.ecg-section {
+  margin: 16px 16px 0;
+  background: #020810;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  overflow: hidden;
+  position: relative;
+}
+.ecg-header {
+  padding: 8px 14px;
+  display: flex; align-items: center; justify-content: space-between;
+  border-bottom: 1px solid var(--border);
+}
+.ecg-label {
+  font-family: var(--orb);
+  font-size: .55rem;
+  letter-spacing: 2px;
+  color: var(--dim);
+}
+.ecg-mode-badge {
+  font-size: .58rem;
+  letter-spacing: 1.5px;
+  padding: 3px 8px;
+  border-radius: 4px;
+  border: 1px solid;
+  transition: .3s;
+}
+.ecg-mode-badge.normal   { border-color: var(--green); color: var(--green); }
+.ecg-mode-badge.asyst    { border-color: #444; color: #666; }
+.ecg-mode-badge.fv       { border-color: var(--red); color: var(--red); }
+.ecg-mode-badge.tachy    { border-color: var(--orange); color: var(--orange); }
+.ecg-mode-badge.brady    { border-color: var(--yellow); color: var(--yellow); }
+
+.ecg-canvas-wrap {
+  position: relative;
+  height: 140px;
+  background: repeating-linear-gradient(
+    0deg, transparent, transparent 19px, rgba(0,255,136,.04) 20px
+  ),
+  repeating-linear-gradient(
+    90deg, transparent, transparent 19px, rgba(0,255,136,.04) 20px
+  );
+}
+canvas#ecgCanvas { display: block; width: 100%; height: 100%; }
+
+/* Scanning line overlay */
+.ecg-scan {
+  position: absolute; top: 0; bottom: 0;
+  width: 2px;
+  background: linear-gradient(to bottom, transparent, rgba(0,255,136,.3), transparent);
+  pointer-events: none;
+}
+
+/* ═══════════════════════════════════════════
+   STATS BAR
+═══════════════════════════════════════════ */
+.stats-bar {
+  margin: 16px 16px 0;
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 8px;
+}
+.stat-card {
+  background: var(--bg1);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 12px 10px;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+  transition: .3s;
+}
+.stat-card::before {
+  content: '';
+  position: absolute; bottom: 0; left: 0; right: 0; height: 2px;
+  background: var(--green);
+  transform: scaleX(0);
+  transition: .3s;
+}
+.stat-card.active::before { transform: scaleX(1); }
+
+.stat-icon { font-size: 16px; margin-bottom: 4px; }
+.stat-val {
+  font-family: var(--orb);
+  font-size: 1.35rem;
+  font-weight: 700;
+  line-height: 1;
+  margin-bottom: 4px;
+  transition: .3s;
+}
+.stat-label {
+  font-size: .55rem;
+  letter-spacing: 1.5px;
+  color: var(--dim);
+  text-transform: uppercase;
+}
+
+.stat-val.green  { color: var(--green); text-shadow: var(--g-green); }
+.stat-val.red    { color: var(--red);   text-shadow: var(--g-red); }
+.stat-val.orange { color: var(--orange); }
+.stat-val.yellow { color: var(--yellow); }
+.stat-val.dim    { color: var(--dim); }
+.stat-val.white  { color: #fff; }
+
+/* ═══════════════════════════════════════════
+   ALERT BANNER
+═══════════════════════════════════════════ */
+.alert-banner {
+  margin: 16px 16px 0;
+  border-radius: 10px;
+  padding: 12px 16px;
+  display: flex; align-items: center; gap: 12px;
+  font-size: .8rem;
+  font-weight: 500;
+  letter-spacing: .5px;
+  transition: .3s;
+  animation: slideIn .3s ease;
+}
+@keyframes slideIn { from { opacity:0; transform: translateY(-8px); } to { opacity:1; transform:none; } }
+
+.alert-banner.normal  { background: #001a0e; border: 1px solid var(--green); color: var(--green); }
+.alert-banner.arrest  { background: #1a0008; border: 1px solid var(--red);   color: var(--red); animation: banner-pulse 1s infinite; }
+.alert-banner.fv      { background: #1a0808; border: 1px solid var(--orange); color: var(--orange); animation: banner-pulse .7s infinite; }
+.alert-banner.brady   { background: #1a1400; border: 1px solid var(--yellow); color: var(--yellow); }
+.alert-banner.tachy   { background: #1a0d00; border: 1px solid var(--orange); color: var(--orange); }
+@keyframes banner-pulse { 0%,100%{opacity:1} 50%{opacity:.6} }
+.alert-icon { font-size: 1.4rem; flex-shrink: 0; }
+.alert-text { line-height: 1.5; }
+.alert-text strong { display: block; font-family: var(--orb); font-size: .65rem; letter-spacing: 2px; margin-bottom: 2px; }
+
+/* ═══════════════════════════════════════════
+   RCP STATUS
+═══════════════════════════════════════════ */
+.rcp-panel {
+  margin: 16px 16px 0;
+  border-radius: 10px;
+  padding: 14px 16px;
+  display: flex; align-items: center; gap: 14px;
+  transition: .3s;
+}
+.rcp-panel.off  { background: var(--bg1); border: 1px solid var(--border); }
+.rcp-panel.on   { background: #14000a; border: 1px solid var(--red); box-shadow: var(--g-red); animation: rcp-pulse .5s infinite alternate; }
+@keyframes rcp-pulse { from{box-shadow:var(--g-red)} to{box-shadow: 0 0 30px #ff174488, 0 0 60px #ff174444} }
+
+.rcp-heart {
+  font-size: 2rem;
+  flex-shrink: 0;
+}
+.rcp-panel.on .rcp-heart { animation: heartbeat .5s infinite alternate; }
+@keyframes heartbeat { from{transform:scale(1)} to{transform:scale(1.25)} }
+
+.rcp-info { flex: 1; }
+.rcp-status {
+  font-family: var(--orb);
+  font-size: .65rem;
+  letter-spacing: 2px;
+  margin-bottom: 4px;
+}
+.rcp-panel.off .rcp-status { color: var(--dim); }
+.rcp-panel.on  .rcp-status { color: var(--red); }
+.rcp-details { font-size: .7rem; color: var(--dim); line-height: 1.5; }
+.rcp-panel.on .rcp-details { color: #ffaaaa; }
+
+/* ═══════════════════════════════════════════
+   ECG MODE SWITCHER
+═══════════════════════════════════════════ */
+.ecg-mode-section {
+  margin: 16px 16px 0;
+}
+.ecg-mode-dots {
+  display: flex; justify-content: center; gap: 6px; margin-top: 10px;
+}
+.ecg-mode-dot {
+  width: 6px; height: 6px; border-radius: 50%;
+  background: var(--border2);
+  transition: .3s;
+}
+.ecg-mode-dot.active { background: var(--cyan); box-shadow: 0 0 6px var(--cyan); }
+
+/* ═══════════════════════════════════════════
+   PREGNANCY ALERT MODAL
+═══════════════════════════════════════════ */
+.modal-overlay {
+  position: fixed; inset: 0; z-index: 200;
+  background: rgba(4,8,15,.9);
+  backdrop-filter: blur(4px);
+  display: flex; align-items: center; justify-content: center;
+  padding: 20px;
+  opacity: 0; pointer-events: none; transition: .3s;
+}
+.modal-overlay.visible { opacity: 1; pointer-events: auto; }
+.modal-box {
+  background: var(--bg1);
+  border: 1px solid var(--orange);
+  border-radius: 14px;
+  padding: 24px;
+  max-width: 380px; width: 100%;
+  box-shadow: var(--g-orange);
+}
+.modal-title { font-family: var(--orb); font-size: .8rem; letter-spacing: 2px; color: var(--orange); margin-bottom: 12px; }
+.modal-body { font-size: .82rem; line-height: 1.8; color: var(--text); margin-bottom: 18px; }
+.modal-body strong { color: var(--orange); }
+
+/* ═══════════════════════════════════════════
+   HISTORIQUE FIREBASE
+═══════════════════════════════════════════ */
+.hist-list {
+  display: flex; flex-direction: column; gap: 6px;
+  max-height: 220px; overflow-y: auto;
+}
+.hist-item {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 8px;
+  background: var(--bg0);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 7px 12px;
+  font-size: .68rem;
+  animation: fadeUp .3s ease;
+}
+@keyframes fadeUp { from{opacity:0;transform:translateY(4px)} to{opacity:1;transform:none} }
+.hist-id   { color: var(--dim); font-size:.6rem; }
+.hist-etat { font-weight: 500; }
+.hist-bpm  { font-family: var(--orb); font-size: .7rem; }
+.hist-time { color: var(--dim); }
+
+.hist-etat.normal { color: var(--green); }
+.hist-etat.asystolie { color: #555; }
+.hist-etat.fv { color: var(--red); }
+.hist-etat.tachycardie { color: var(--orange); }
+.hist-etat.bradycardie { color: var(--yellow); }
+
+.no-firebase {
+  font-size: .72rem;
+  color: var(--dim);
+  text-align: center;
+  padding: 16px;
+  border: 1px dashed var(--border);
+  border-radius: 7px;
+}
+
+/* ═══════════════════════════════════════════
+   TOAST
+═══════════════════════════════════════════ */
+#toast {
+  position: fixed;
+  bottom: 20px; left: 50%; transform: translateX(-50%) translateY(80px);
+  background: var(--bg2);
+  border: 1px solid var(--green);
+  border-radius: 8px;
+  padding: 10px 20px;
+  font-size: .75rem;
+  letter-spacing: 1px;
+  color: var(--green);
+  box-shadow: var(--g-green);
+  z-index: 300;
+  transition: .3s;
+  pointer-events: none;
+  white-space: nowrap;
+}
+#toast.show { transform: translateX(-50%) translateY(0); }
+#toast.error { border-color: var(--red); color: var(--red); box-shadow: var(--g-red); }
+
+/* ═══════════════════════════════════════════
+   FOOTER
+═══════════════════════════════════════════ */
+.app-footer {
+  text-align: center;
+  padding: 24px 16px 0;
+  font-size: .58rem;
+  letter-spacing: 1.5px;
+  color: var(--dim);
+  line-height: 1.8;
+}
+</style>
+</head>
+<body>
+
+<!-- ══════════════════════════════════════════
+     PREGNANCY MODAL
+══════════════════════════════════════════ -->
+<div class="modal-overlay" id="modalFG">
+  <div class="modal-box">
+    <div class="modal-title">⚠ ALERTE — FEMME ENCEINTE</div>
+    <div class="modal-body">
+      Avant de commencer la surveillance :<br><br>
+      → Incliner la patiente de <strong>15–30°</strong> vers la gauche<br>
+      → Déplacer manuellement l'utérus vers la gauche si nécessaire<br>
+      → Les paramètres de compression <strong>restent inchangés</strong>
+    </div>
+    <button class="btn btn-ghost" onclick="confirmFG()" style="border-color:var(--orange);color:var(--orange);">
+      ✓ Opérateur confirmé — Continuer
+    </button>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     APP SHELL
+══════════════════════════════════════════ -->
+<div class="app">
+
+  <!-- ▸ HEADER -->
+  <header class="header">
+    <div class="header-brand">
+      <div class="header-logo">❤️</div>
+      <div>
+        <div class="header-title">Smart CPR Assistant</div>
+        <div class="header-sub">DISPOSITIF RCP · SIMULATION ECG · ERC/AHA</div>
+      </div>
+    </div>
+    <div class="wifi-badge disconnected" id="wifiBadge">
+      <div class="wifi-dot"></div>
+      <span id="wifiLabel">WiFi</span>
+    </div>
+  </header>
+
+  <!-- ▸ SECTION 1 — PATIENT INFORMATION -->
+  <div class="section">
+    <div class="section-header">
+      <span class="section-icon">👤</span>
+      Patient Information
+    </div>
+    <div class="section-body">
+      <div class="field">
+        <label class="field-label">Âge (16 – 110 ans)</label>
+        <input class="field-input" type="number" id="age" min="16" max="110" placeholder="Ex : 45"
+               oninput="onFormChange()">
+      </div>
+      <div class="field">
+        <label class="field-label">Sexe</label>
+        <select class="field-select" id="sexe" onchange="onFormChange()">
+          <option value="">— Sélectionner —</option>
+          <option value="H">Homme</option>
+          <option value="F">Femme</option>
+          <option value="FG">Femme enceinte</option>
+        </select>
+      </div>
+      <div class="field">
+        <label class="field-label">Morphologie</label>
+        <select class="field-select" id="morpho" onchange="onFormChange()">
+          <option value="">— Sélectionner —</option>
+          <option value="ecto">Ectomorphe</option>
+          <option value="meso">Mésomorphe</option>
+          <option value="endo">Endomorphe</option>
+          <option value="sport">Sportif</option>
+        </select>
+      </div>
+
+      <!-- Algo preview -->
+      <div class="algo-box" id="algoBox">
+        <div class="algo-row"><span class="algo-key">Tranche d'âge</span><span class="algo-val" id="a-tranche">—</span></div>
+        <div class="algo-row"><span class="algo-key">BPM normal</span><span class="algo-val" id="a-bpm">—</span></div>
+        <div class="algo-row"><span class="algo-key">Profondeur RCP</span><span class="algo-val" id="a-prof">—</span></div>
+        <div class="algo-row"><span class="algo-key">Force compression</span><span class="algo-val" id="a-force">—</span></div>
+        <div class="algo-row"><span class="algo-key">Fréquence RCP</span><span class="algo-val">120 comp/min</span></div>
+        <div id="a-fg-warn" style="display:none" class="algo-row">
+          <span class="algo-warn">⚠ Grossesse — inclinaison 15–30° gauche</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ▸ SECTION 2 — WiFi CONNECTION -->
+  <div class="section">
+    <div class="section-header">
+      <span class="section-icon">📶</span>
+      Connexion WiFi — ESP32
+    </div>
+    <div class="section-body">
+      <div class="wifi-input-row">
+        <input class="wifi-ip-input" type="text" id="esp32ip"
+               placeholder="192.168.1.xx  (IP de l'ESP32)" value="192.168.1.100">
+        <button class="btn btn-blue" style="width:auto;padding:10px 16px;font-size:.62rem;" onclick="connectWifi()">
+          📶 Connect
+        </button>
+      </div>
+      <div class="wifi-status-bar" id="wifiStatus">
+        📡 En attente de connexion WiFi…
+      </div>
+    </div>
+  </div>
+
+  <!-- ▸ START MONITORING -->
+  <div style="margin:16px 16px 0;">
+    <button class="btn btn-green" id="btnStart" onclick="startMonitoring()" disabled>
+      ▶ Start Monitoring
+    </button>
+    <button class="btn btn-ghost" id="btnStop" onclick="stopMonitoring()" style="display:none; margin-top:10px;">
+      ⏹ Stop Monitoring
+    </button>
+  </div>
+
+  <!-- ▸ ECG SIGNAL DISPLAY -->
+  <div class="ecg-section" id="ecgSection">
+    <div class="ecg-header">
+      <div class="ecg-label">❤️ ECG SIGNAL DISPLAY · SIMULATION</div>
+      <div class="ecg-mode-badge normal" id="ecgModeBadge">NORMAL ECG</div>
+    </div>
+    <div class="ecg-canvas-wrap">
+      <canvas id="ecgCanvas"></canvas>
+    </div>
+  </div>
+
+  <!-- ▸ STATS BAR -->
+  <div class="stats-bar" id="statsBar">
+    <div class="stat-card" id="sc-bpm">
+      <div class="stat-icon">💓</div>
+      <div class="stat-val dim" id="sv-bpm">—</div>
+      <div class="stat-label">BPM</div>
+    </div>
+    <div class="stat-card" id="sc-status">
+      <div class="stat-icon">📊</div>
+      <div class="stat-val dim" id="sv-status" style="font-size:.8rem;">—</div>
+      <div class="stat-label">Status</div>
+    </div>
+    <div class="stat-card" id="sc-rcp">
+      <div class="stat-icon">🚑</div>
+      <div class="stat-val dim" id="sv-rcp">OFF</div>
+      <div class="stat-label">RCP</div>
+    </div>
+  </div>
+
+  <!-- ▸ ALERT BANNER -->
+  <div class="alert-banner normal" id="alertBanner">
+    <div class="alert-icon">✅</div>
+    <div class="alert-text">
+      <strong>SURVEILLANCE ACTIVE</strong>
+      En attente de données ECG…
+    </div>
+  </div>
+
+  <!-- ▸ RCP PANEL -->
+  <div class="rcp-panel off" id="rcpPanel">
+    <div class="rcp-heart">💚</div>
+    <div class="rcp-info">
+      <div class="rcp-status">RCP : INACTIVE</div>
+      <div class="rcp-details" id="rcpDetails">Surveillance continue en cours</div>
+    </div>
+  </div>
+
+  <!-- ▸ ECG MODE SWITCHER -->
+  <div class="ecg-mode-section">
+    <button class="btn btn-ecg-mode" onclick="cycleEcgMode()">
+      ⇄ ECG Mode
+    </button>
+    <div class="ecg-mode-dots">
+      <div class="ecg-mode-dot active" id="dot-0"></div>
+      <div class="ecg-mode-dot" id="dot-1"></div>
+      <div class="ecg-mode-dot" id="dot-2"></div>
+      <div class="ecg-mode-dot" id="dot-3"></div>
+      <div class="ecg-mode-dot" id="dot-4"></div>
+    </div>
+    <div style="text-align:center;margin-top:6px;font-size:.6rem;color:var(--dim);letter-spacing:1.5px;"
+         id="ecgModeLabel">MODE 1/5 · SINUSAL NORMAL</div>
+  </div>
+
+  <!-- ▸ HISTORIQUE FIREBASE -->
+  <div class="section" style="margin-top:16px;">
+    <div class="section-header">
+      <span class="section-icon">🗄️</span>
+      Historique — Firebase Firestore
+    </div>
+    <div class="section-body">
+      <div class="hist-list" id="histList">
+        <div class="no-firebase" id="histEmpty">
+          Connectez Firebase pour voir l'historique en temps réel
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="app-footer">
+    SMART CPR ASSISTANT · SIMULATION ECG ARTIFICIELLE<br>
+    CONFORME ERC / AHA · ADULTE 16–110 ANS<br>
+    WiFi ESP32 · Firebase Firestore
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<!-- ══════════════════════════════════════════════════════
+     JAVASCRIPT — Algorithme RCP + ECG Simulation + WiFi
+══════════════════════════════════════════════════════ -->
+<script>
+/* ═══════════════════════════════════════
+   STATE
+═══════════════════════════════════════ */
+const S = {
+  patient: null,
+  algo: null,
+  wifiOk: false,
+  esp32ip: '192.168.1.100',
+  monitoring: false,
+  ecgMode: 0,         // 0=normal 1=asystolie 2=fv 3=tachycardie 4=bradycardie
+  bpm: 0,
+  massageActif: false,
+  sessionId: null,
+  raf: null,
+  lastLog: 0,
+  fbReady: false,
+};
+
+const ECG_MODES = [
+  { key:'normal',      label:'SINUSAL NORMAL',           badge:'NORMAL ECG',                cls:'normal' },
+  { key:'asystolie',   label:'ASYSTOLIE (ARRÊT)',         badge:'ASYSTOLE',                  cls:'asyst'  },
+  { key:'fv',          label:'FIBR. VENTRICULAIRE',       badge:'VENTRICULAR FIBRILLATION',  cls:'fv'     },
+  { key:'tachycardie', label:'TACHYCARDIE',               badge:'TACHYCARDIA',               cls:'tachy'  },
+  { key:'bradycardie', label:'BRADYCARDIE',               badge:'BRADYCARDIA',               cls:'brady'  },
+];
+
+/* ═══════════════════════════════════════
+   ALGORITHME RCP
+═══════════════════════════════════════ */
+function calcAlgo(age, sexe, morpho) {
+  const tranche =
+    age<=20?'Adolescent tardif':age<=30?'Adulte jeune':age<=45?'Adulte':
+    age<=60?'Âge moyen':age<=75?'Personne âgée':'Grand âge';
+
+  let BPM_min=60, BPM_max=100;
+  if(morpho==='sport') BPM_min=40;
+
+  let profondeur=5.5, force='Normale';
+  if(morpho==='ecto'){ profondeur=4.5; force='Légère'; }
+  else if(morpho==='endo'){ force='Élevée'; }
+
+  const isAgee   = age>=61&&age<=75;
+  const isGrand  = age>75;
+  if(isAgee){
+    if(force==='Normale') force='Modérée';
+    else if(force==='Légère') force='Très légère';
+  }
+  if(isGrand){
+    profondeur=4.5;
+    if(force==='Élevée') force='Normale';
+    else if(force==='Normale') force='Modérée';
+    else if(force==='Légère') force='Très légère';
+  }
+  return { tranche, BPM_min, BPM_max, profondeur, force, freq_comp:120 };
+}
+
+/* ═══════════════════════════════════════
+   FORM CHANGE
+═══════════════════════════════════════ */
+function onFormChange() {
+  const age   = parseInt(document.getElementById('age').value);
+  const sexe  = document.getElementById('sexe').value;
+  const morpho = document.getElementById('morpho').value;
+
+  if(!age||age<16||age>110||!sexe||!morpho) {
+    document.getElementById('algoBox').classList.remove('visible');
+    document.getElementById('btnStart').disabled = true;
+    return;
+  }
+  const a = calcAlgo(age, sexe, morpho);
+  document.getElementById('algoBox').classList.add('visible');
+  document.getElementById('a-tranche').textContent = a.tranche;
+  document.getElementById('a-bpm').textContent = a.BPM_min + ' – ' + a.BPM_max + ' BPM';
+  document.getElementById('a-prof').textContent = a.profondeur + ' cm';
+  document.getElementById('a-force').textContent = a.force;
+  document.getElementById('a-fg-warn').style.display = sexe==='FG'?'flex':'none';
+  document.getElementById('btnStart').disabled = !S.wifiOk;
+}
+
+/* ═══════════════════════════════════════
+   WiFi CONNECTION (simulation — fetch ESP32)
+═══════════════════════════════════════ */
+async function connectWifi() {
+  const ip = document.getElementById('esp32ip').value.trim();
+  if(!ip){ toast('Entrez l\'adresse IP de l\'ESP32', true); return; }
+  S.esp32ip = ip;
+
+  setWifiUI('connecting','⏳ Connexion en cours…');
+
+  /* Tentative fetch vers l'ESP32 — /ping endpoint
+     En simulation, on simule après 1.2s             */
+  try {
+    const ctrl = new AbortController();
+    const timer = setTimeout(()=>ctrl.abort(), 3000);
+    const resp  = await fetch(`http://${ip}/ping`, { signal: ctrl.signal, mode:'no-cors' });
+    clearTimeout(timer);
+    onWifiOk(ip);
+  } catch(e) {
+    /* En simulation, on accepte quand même si "ESP32 simulation mode" */
+    if(e.name==='AbortError'||e.message.includes('Failed to fetch')||e.message.includes('NetworkError')){
+      /* Simulation: on suppose l'ESP32 connecté sur le réseau local */
+      onWifiOk(ip, true);
+    } else {
+      onWifiFail();
+    }
+  }
+}
+
+function onWifiOk(ip, sim=false) {
+  S.wifiOk = true;
+  const msg = sim ? `✅ WiFi Connected ✓ (${ip}) [SIM]` : `✅ WiFi Connected ✓ (${ip})`;
+  setWifiUI('connected', msg);
+  document.getElementById('btnStart').disabled = !formValid();
+  toast('WiFi Connected ✓');
+}
+function onWifiFail() {
+  S.wifiOk = false;
+  setWifiUI('error','✗ WiFi Disconnected — Vérifiez l\'IP et le réseau');
+  toast('Connexion échouée', true);
+}
+
+function setWifiUI(state, msg) {
+  const badge = document.getElementById('wifiBadge');
+  const status = document.getElementById('wifiStatus');
+  const lbl = document.getElementById('wifiLabel');
+  badge.className = 'wifi-badge ' + (state==='connected'?'connected':state==='connecting'?'connecting':'disconnected');
+  lbl.textContent  = state==='connected'?'Connected':state==='connecting'?'…':'WiFi';
+  status.className = 'wifi-status-bar ' + (state==='connected'?'ok':state==='connecting'?'pending':'err');
+  status.textContent = msg;
+}
+
+function formValid() {
+  const age=parseInt(document.getElementById('age').value);
+  return age>=16&&age<=110&&!!document.getElementById('sexe').value&&!!document.getElementById('morpho').value;
+}
+
+/* ═══════════════════════════════════════
+   START / STOP MONITORING
+═══════════════════════════════════════ */
+async function startMonitoring() {
+  const age   = parseInt(document.getElementById('age').value);
+  const sexe  = document.getElementById('sexe').value;
+  const morpho = document.getElementById('morpho').value;
+
+  if(sexe==='FG') {
+    document.getElementById('modalFG').classList.add('visible');
+    return;
+  }
+  _launch(age, sexe, morpho);
+}
+
+function confirmFG() {
+  document.getElementById('modalFG').classList.remove('visible');
+  const age   = parseInt(document.getElementById('age').value);
+  const sexe  = document.getElementById('sexe').value;
+  const morpho = document.getElementById('morpho').value;
+  _launch(age, sexe, morpho);
+}
+
+async function _launch(age, sexe, morpho) {
+  S.patient = {age, sexe, morpho};
+  S.algo = calcAlgo(age, sexe, morpho);
+  S.monitoring = true;
+  S.massageActif = false;
+  S.bpm = 0;
+
+  document.getElementById('btnStart').style.display='none';
+  document.getElementById('btnStop').style.display='block';
+
+  /* Save to Firebase */
+  if(window.FB?.ok) {
+    try {
+      const ref = await window.FB.addDoc(window.FB.collection(window.FB.db,'patients'),{
+        age, sexe, morphologie:morpho,
+        tranche: S.algo.tranche,
+        BPM_min: S.algo.BPM_min,
+        BPM_max: S.algo.BPM_max,
+        profondeur: S.algo.profondeur,
+        force: S.algo.force,
+        esp32ip: S.esp32ip,
+        timestamp: window.FB.serverTimestamp()
+      });
+      S.sessionId = ref.id;
+      S.fbReady = true;
+      startHistListener();
+      toast('Patient enregistré · Firebase ✓');
+    } catch(e) { console.warn('Firebase:', e.message); }
+  }
+
+  initEcgCanvas();
+  ecgLoop();
+  toast('▶ Monitoring démarré');
+}
+
+function stopMonitoring() {
+  S.monitoring = false;
+  if(S.raf){ cancelAnimationFrame(S.raf); S.raf=null; }
+  document.getElementById('btnStart').style.display='block';
+  document.getElementById('btnStop').style.display='none';
+  setStatsDefault();
+  toast('⏹ Monitoring arrêté');
+}
+
+/* ═══════════════════════════════════════
+   ECG CANVAS SETUP
+═══════════════════════════════════════ */
+let ecgBuf=[], ecgHead=0;
+const W=440, H=140;
+
+function initEcgCanvas() {
+  const c = document.getElementById('ecgCanvas');
+  c.width=W; c.height=H;
+  ecgBuf = new Array(W).fill(H/2);
+  ecgHead = 0;
+}
+
+/* ═══════════════════════════════════════
+   ECG SIGNAL GENERATOR
+═══════════════════════════════════════ */
+function genSample(t) {
+  const mode = ECG_MODES[S.ecgMode].key;
+  switch(mode) {
+    case 'asystolie':
+      return (Math.random()-.5)*.05;
+
+    case 'fv': {
+      const f = 7+Math.sin(t*2.7)*2.5;
+      return Math.sin(t*f*Math.PI*2)*.38
+           + Math.sin(t*f*1.37*Math.PI*2)*.22
+           + (Math.random()-.5)*.28;
+    }
+    case 'tachycardie': {
+      const per=0.38; const ph=(t%per)/per;
+      return qrs(ph);
+    }
+    case 'bradycardie': {
+      const per=1.6; const ph=(t%per)/per;
+      return qrs(ph)*.9;
+    }
+    default: { /* normal ~72 BPM */
+      const per=0.83; const ph=(t%per)/per;
+      return qrs(ph);
+    }
+  }
+}
+
+function qrs(p) {
+  const g=(c,s)=>Math.exp(-((p-c)**2)/(2*s*s));
+  return .1*g(.14,.055)          /* P  */
+       - .14*g(.30,.016)         /* Q  */
+       + 1.0*g(.34,.018)         /* R  */
+       - .22*g(.375,.016)        /* S  */
+       + .28*g(.55,.065);        /* T  */
+}
+
+/* ═══════════════════════════════════════
+   ECG LOOP
+═══════════════════════════════════════ */
+function ecgLoop() {
+  if(!S.monitoring) return;
+  S.raf = requestAnimationFrame(ecgLoop);
+
+  const now = Date.now();
+  const t = now/1000;
+  const samp = genSample(t);
+  ecgBuf[ecgHead % W] = H/2 - samp*(H*.36);
+  ecgHead++;
+
+  drawEcg();
+  runAlgo(samp, now);
+}
+
+/* ═══════════════════════════════════════
+   DRAW ECG
+═══════════════════════════════════════ */
+function drawEcg() {
+  const c = document.getElementById('ecgCanvas');
+  const ctx = c.getContext('2d');
+  const mode = ECG_MODES[S.ecgMode].key;
+
+  ctx.fillStyle='#020810';
+  ctx.fillRect(0,0,W,H);
+
+  /* trace color */
+  const col = mode==='asystolie'?'#445566':mode==='fv'?'#ff1744':mode==='tachycardie'?'#ff6d00':mode==='bradycardie'?'#ffd600':'#00ff88';
+
+  ctx.strokeStyle=col;
+  ctx.lineWidth=2;
+  ctx.shadowColor=col; ctx.shadowBlur=8;
+  ctx.beginPath();
+  for(let i=0;i<W;i++){
+    const xi=(ecgHead+i)%W;
+    const y=ecgBuf[xi];
+    i===0?ctx.moveTo(i,y):ctx.lineTo(i,y);
+  }
+  ctx.stroke();
+  ctx.shadowBlur=0;
+
+  /* scan blackout */
+  const sx=ecgHead%W;
+  ctx.fillStyle='rgba(2,8,16,.85)';
+  ctx.fillRect(sx,0,12,H);
+}
+
+/* ═══════════════════════════════════════
+   ALGORITHME DE DÉCISION RCP
+═══════════════════════════════════════ */
+function runAlgo(samp, now) {
+  const mode = ECG_MODES[S.ecgMode].key;
+  const {BPM_min, BPM_max} = S.algo;
+  let bpm=0, etat='', massage=false;
+
+  if(mode==='asystolie' || Math.abs(samp)<.06) {
+    bpm=0; etat='asystolie'; massage=true;
+  } else if(mode==='fv') {
+    bpm=Math.round(260+Math.random()*80); etat='fv'; massage=true;
+  } else if(mode==='tachycardie') {
+    bpm=Math.round(142+Math.random()*22); etat='tachycardie'; massage=false;
+  } else if(mode==='bradycardie') {
+    bpm=Math.round(30+Math.random()*14); etat='bradycardie'; massage=false;
+  } else {
+    bpm=Math.round(67+Math.random()*16); etat='normal'; massage=false;
+  }
+
+  S.bpm=bpm; S.massageActif=massage;
+  updateUI(bpm, etat, massage);
+
+  /* Firebase log toutes les 4s */
+  if(now-S.lastLog>4000 && S.fbReady && S.sessionId) {
+    S.lastLog=now;
+    window.FB.addDoc(window.FB.collection(window.FB.db,'sessions'),{
+      patientId: S.sessionId,
+      bpm, etat, massageActif: massage,
+      esp32ip: S.esp32ip,
+      timestamp: window.FB.serverTimestamp()
+    }).catch(()=>{});
+  }
+}
+
+/* ═══════════════════════════════════════
+   UPDATE UI
+═══════════════════════════════════════ */
+function updateUI(bpm, etat, massage) {
+  /* BPM */
+  const svBpm=document.getElementById('sv-bpm');
+  svBpm.textContent = bpm>0?bpm:'—';
+  svBpm.className = 'stat-val '+(massage?'red':bpm<(S.algo?.BPM_min||60)?'yellow':bpm>(S.algo?.BPM_max||100)?'orange':'green');
+
+  /* Status */
+  const svStatus=document.getElementById('sv-status');
+  const statusMap={normal:'Normal',asystolie:'Arrest',fv:'Fibr. V.',tachycardie:'Tachy.',bradycardie:'Brady.'};
+  svStatus.textContent=statusMap[etat]||'—';
+  svStatus.className='stat-val '+(etat==='normal'?'green':etat==='asystolie'?'dim':etat==='fv'?'red':'orange');
+
+  /* RCP badge */
+  const svRcp=document.getElementById('sv-rcp');
+  svRcp.textContent=massage?'ON':'OFF';
+  svRcp.className='stat-val '+(massage?'red':'dim');
+
+  /* Alert banner */
+  const banner=document.getElementById('alertBanner');
+  const bannerData = {
+    normal:    ['normal',  '✅',  'RYTHME NORMAL',               '✓ Normal rhythm detected — RCP OFF'],
+    asystolie: ['arrest',  '⛔',  'ARRÊT CARDIAQUE DÉTECTÉ',      '⚠ Cardiac arrest — RCP Started'],
+    fv:        ['fv',      '⚡',  'FIBRILLATION VENTRICULAIRE',   '⚠ Ventricular fibrillation — ⚡ Shock recommended'],
+    tachycardie:['tachy',  '⚠️',  'TACHYCARDIE',                  '⚠ Tachycardia detected — Prepare defibrillator'],
+    bradycardie:['brady',  '🔻', 'BRADYCARDIE',                  '⚠ Bradycardia detected — Prepare defibrillator'],
+  };
+  const [banCls,icon,title,body]=bannerData[etat]||bannerData.normal;
+  banner.className='alert-banner '+banCls;
+  banner.querySelector('.alert-icon').textContent=icon;
+  banner.querySelector('.alert-text').innerHTML=`<strong>${title}</strong>${body}`;
+
+  /* RCP Panel */
+  const rcpPanel=document.getElementById('rcpPanel');
+  rcpPanel.className='rcp-panel '+(massage?'on':'off');
+  rcpPanel.querySelector('.rcp-heart').textContent=massage?'❤️':'💚';
+  rcpPanel.querySelector('.rcp-status').textContent=massage?'RCP : ACTIVE':'RCP : INACTIVE';
+  const details=document.getElementById('rcpDetails');
+  if(massage && S.algo) {
+    details.textContent=`${S.algo.freq_comp} comp/min · ${S.algo.profondeur} cm · Force : ${S.algo.force}`;
+  } else {
+    const msgs={normal:'✓ Normal rhythm detected — Surveillance continue',
+      tachycardie:'Tachycardie — Positionner le défibrillateur',
+      bradycardie:'Bradycardie — Préparer le défibrillateur',
+      asystolie:'Démarrage RCP…', fv:'⚡ Choc électrique recommandé'};
+    details.textContent=msgs[etat]||'Surveillance en cours';
+  }
+}
+
+function setStatsDefault() {
+  ['sv-bpm','sv-status','sv-rcp'].forEach(id=>{
+    document.getElementById(id).textContent='—';
+    document.getElementById(id).className='stat-val dim';
+  });
+  document.getElementById('rcpPanel').className='rcp-panel off';
+  document.getElementById('rcpPanel').querySelector('.rcp-heart').textContent='💚';
+  document.getElementById('rcpPanel').querySelector('.rcp-status').textContent='RCP : INACTIVE';
+  document.getElementById('rcpDetails').textContent='Surveillance continue en cours';
+  document.getElementById('alertBanner').className='alert-banner normal';
+  document.getElementById('alertBanner').querySelector('.alert-icon').textContent='📡';
+  document.getElementById('alertBanner').querySelector('.alert-text').innerHTML='<strong>EN ATTENTE</strong>Appuyez sur Start Monitoring pour commencer';
+}
+
+/* ═══════════════════════════════════════
+   ECG MODE CYCLE
+═══════════════════════════════════════ */
+function cycleEcgMode() {
+  S.ecgMode=(S.ecgMode+1)%ECG_MODES.length;
+  const m=ECG_MODES[S.ecgMode];
+  /* Mode badge */
+  const badge=document.getElementById('ecgModeBadge');
+  badge.className='ecg-mode-badge '+m.cls;
+  badge.textContent=m.badge;
+  /* Dots */
+  for(let i=0;i<5;i++) document.getElementById('dot-'+i).className='ecg-mode-dot'+(i===S.ecgMode?' active':'');
+  /* Label */
+  document.getElementById('ecgModeLabel').textContent=`MODE ${S.ecgMode+1}/5 · ${m.label}`;
+  toast('Signal: '+m.label);
+}
+
+/* ═══════════════════════════════════════
+   FIREBASE HISTORIQUE LISTENER
+═══════════════════════════════════════ */
+function startHistListener() {
+  if(!window.FB?.ok) return;
+  const q=window.FB.query(
+    window.FB.collection(window.FB.db,'sessions'),
+    window.FB.orderBy('timestamp','desc'),
+    window.FB.limit(15)
+  );
+  window.FB.onSnapshot(q, snap=>{
+    const list=document.getElementById('histList');
+    if(snap.empty){ list.innerHTML='<div class="no-firebase">Aucun événement enregistré encore.</div>'; return; }
+    list.innerHTML=snap.docs.map(doc=>{
+      const d=doc.data();
+      const ts=d.timestamp?.toDate?d.timestamp.toDate():new Date();
+      const hms=ts.toLocaleTimeString('fr-FR');
+      const cls=d.etat||'normal';
+      return `<div class="hist-item">
+        <span class="hist-id">${doc.id.slice(0,7)}…</span>
+        <span class="hist-etat ${cls}">${(d.etat||'—').toUpperCase()}</span>
+        <span class="hist-bpm" style="color:var(--${d.massageActif?'red':d.bpm>100?'orange':d.bpm<60?'yellow':'green'})">${d.bpm||0}</span>
+        <span class="hist-time">${hms}</span>
+      </div>`;
+    }).join('');
+  });
+}
+
+/* ═══════════════════════════════════════
+   TOAST
+═══════════════════════════════════════ */
+let toastT;
+function toast(msg, err=false) {
+  const el=document.getElementById('toast');
+  el.textContent=msg;
+  el.className='show'+(err?' error':'');
+  clearTimeout(toastT);
+  toastT=setTimeout(()=>el.classList.remove('show'), 3000);
+}
+
+/* ═══════════════════════════════════════
+   FIREBASE READY
+═══════════════════════════════════════ */
+document.addEventListener('fbReady',()=>{
+  if(window.FB?.ok) {
+    toast('Firebase connecté ✓');
+  } else {
+    console.warn('Firebase non configuré — mode local');
+  }
+});
+
+/* ═══ INIT ═══ */
+setStatsDefault();
+</script>
+</body>
+</html>
